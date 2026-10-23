@@ -15,8 +15,8 @@ const userSchema = new mongoose.Schema({
     password : {
         type : String,
         required: true,
-        minlength : 6,
-        select : false
+        // minlength : 6,
+        // select : false
     },
     avatar : {
         type : String,
@@ -29,17 +29,22 @@ const userSchema = new mongoose.Schema({
 }, {timestamps : true})
 
 // Password hashing middleware
-userSchema.pre("save", async function (next) {
-    if(!this.isModified("password"))  return next()
-    const salt = await bcrypt.getSalt(10)
-    this.password = await bcrypt.hash(this.password , salt)
-    next()
-})
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return;
+
+    this.password = await bcrypt.hash(
+        String(this.password),
+        10
+    );
+});
 
 // Method to compare password
-userSchema.methods.matchPassword = async function(enteredPassword){
-    return await bcrypt.compare(enteredPassword , this.password)
-}
+userSchema.methods.matchPassword = async function (enteredPassword) {
+    return bcrypt.compare(
+        String(enteredPassword),
+        this.password
+    );
+};
 
 const UserModel = mongoose.model('User', userSchema)
 export default UserModel
